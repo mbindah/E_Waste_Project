@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Product</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Post Product</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'vendor_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details' %}">My Profile</a></li>
+                <li><a href="{% url 'view_messages1' %}">View Chatroom ({{ unread_message_count }})</a></li>
+                <li><a href="{% url 'post_product' %}">Post Products</a></li>
+                <li><a href="{% url 'view_products' %}">View Products</a></li>
+                <li><a href="{% url 'view_orders' %}">View Orders</a></li> 
+                <li><a href="{% url 'view_ratings' %}">View Ratings</a></li>                
+                <li><a href="{% url 'vendor_logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'post_product' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Post Product</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

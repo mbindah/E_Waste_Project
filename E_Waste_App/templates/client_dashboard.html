@@ -1,0 +1,187 @@
+{% load static %}
+{% load json_encode from json_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+<body>
+    <header>
+        <h1>Client Dashboard</h1>
+        <h4 style="color: lightgreen;">Welcome Client, {{ user.username }}!</h4>
+        <nav>
+            <ul>
+                <li><a href="{% url 'client_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details1' %}">My Profile</a></li>
+                <li><a href="{% url 'view_orders_for_client' %}">View Orders</a></li>
+                <li><a href="{% url 'view_messages' %}">View Chatroom ({{unread_message_count}})</a></li>
+                <li><a href="{% url 'client_logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="metrics">
+            <!-- <h2>Performance Metrics</h2>
+            <p>Total Purchases: {{ total_purchases }}</p>
+            <p>Total Ratings Given: {{ client_ratings_count }}</p>
+            <p>Average Purchase Amount: {{ average_purchase_amount|floatformat:2 }}</p>
+
+<div class="chart-container">
+    <canvas id="purchaseHistoryChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <canvas id="monthlySpendingChart"></canvas>
+</div> -->
+
+<script>
+    console.log("Raw purchase history data:", '{{ purchase_history|escapejs }}');
+    console.log("Raw monthly spending data:", '{{ monthly_spending|escapejs }}');
+
+    var purchaseHistory, monthlySpending;
+
+    try {
+        purchaseHistory = JSON.parse('{{ purchase_history|escapejs }}');
+        console.log("Parsed purchase history data:", purchaseHistory);
+    } catch (error) {
+        console.error("Error parsing purchase history data:", error);
+        purchaseHistory = [];
+    }
+
+    try {
+        monthlySpending = JSON.parse('{{ monthly_spending|escapejs }}');
+        console.log("Parsed monthly spending data:", monthlySpending);
+    } catch (error) {
+        console.error("Error parsing monthly spending data:", error);
+        monthlySpending = [];
+    }
+
+    // Function to safely get data or return empty array
+    function safeGet(data, key) {
+        return (data && data.length && data.map(item => item[key])) || [];
+    }
+
+    // Purchase History Chart
+    var historyCtx = document.getElementById('purchaseHistoryChart').getContext('2d');
+    var historyChart = new Chart(historyCtx, {
+        type: 'bar',
+        data: {
+            labels: safeGet(purchaseHistory, 'product__name'),
+            datasets: [{
+                label: 'Purchase Amount',
+                data: safeGet(purchaseHistory, 'product__price'),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Purchase History'
+                }
+            }
+        }
+    });
+
+    // Monthly Spending Chart
+    var spendingCtx = document.getElementById('monthlySpendingChart').getContext('2d');
+    var spendingChart = new Chart(spendingCtx, {
+        type: 'line',
+        data: {
+            labels: safeGet(monthlySpending, 'month').map(date => {
+                return new Date(date).toLocaleString('default', { month: 'short', year: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Monthly Spending',
+                data: safeGet(monthlySpending, 'spent'),
+                fill: false,
+                borderColor: 'rgb(255, 159, 64)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Spending'
+                }
+            }
+        }
+    });
+</script>
+
+
+        </section>
+
+        <section class="product-list">
+            <h2>Available Products</h2>
+            <!-- home.html -->
+<form method="GET" action="" style="width: 100%;">
+    <!-- Search Box -->
+    <input type="text" name="q" placeholder="Search products..." value="{{ search_query }}" />
+
+    <!-- Vendor Filter (Example: Select dropdown) -->
+    <label for="vendor">Filter by Vendor:</label>
+    <select name="vendor" id="vendor">
+        <option value="">All Vendors</option>
+        {% for vendor in vendors %}
+            <option value="{{ vendor.id }}" {% if vendor.id == filter_vendor %}selected{% endif %}>{{ vendor.company_name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Price Filters -->
+    <label for="min_price">Min Price:</label>
+    <input type="number" name="min_price" value="{{ min_price }}" step="0.01" />
+
+    <label for="max_price">Max Price:</label>
+    <input type="number" name="max_price" value="{{ max_price }}" step="0.01" />
+
+    <!-- Submit Button -->
+    <button type="submit">Search</button>
+</form>
+
+
+            <div class="products">
+                {% for product in products %}
+                    <div class="product">
+                        <img src="{{MEDIA_URL}}{{ product.image }}" alt="{{ product.name }}"> <!-- Product image -->
+                        <h3>{{ product.name }}</h3>
+                        <h6>From {{ product.vendor.company_name }}</h6>
+                        <p>Price: KSh {{ product.price }}</p>
+                        <p>{{ product.description }} <b>This product is swappable.</b></p>
+                        <a href="{% url 'purchase_product' product.id %}">Purchase Product</a>
+                    </div>
+                {% empty %}
+                    <p>No products available.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,284 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Messages</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>View Messages</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'client_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details1' %}">My Profile</a></li>
+                <li><a href="{% url 'view_orders_for_client' %}">View Orders</a></li>
+                <li><a href="{% url 'view_messages' %}">View Chatroom ({{unread_message_count}})</a></li>
+                <li><a href="{% url 'client_logout' %}">Logout</a></li>
+                <!-- Add more links as needed -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+<div class="container">
+    <h2>My Messages</h2>
+    
+    <div class="filter-section mb-4">
+        <label for="vendorSelect">Select Vendor:</label>
+        <select id="vendorSelect" class="form-control" onchange="filterVendor(this.value)">
+            <option value="" disabled selected>Select a vendor</option>
+            {% for vendor in vendors %}
+                <option value="{{ vendor.id }}" {% if selected_vendor and selected_vendor.id == vendor.id %}selected{% endif %}>
+                    {{ vendor.company_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="message-list mt-4" id="messageList">
+        <h4>Your Conversations</h4>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.sender == request.user.client %}sent{% else %}received{% endif %}" data-message-id="{{ message.id }}">
+                    <div class="message-content">
+                        {% if message.sender == request.user.client %}
+                            <p><strong>You:</strong> {{ message.content }}</p>
+                        {% else %}
+                            <p><strong>{{ message.sender.user.username }}:</strong> {{ message.content }}</p>
+                        {% endif %}
+                        <span class="message-timestamp">{{ message.timestamp|date:"F j, Y H:i A" }}</span>
+                    </div>
+                    {% if message.sender == request.user.client %}
+                        <button class="btn btn-danger btn-sm delete-message" data-message-id="{{ message.id }}">Delete</button>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p>No messages found.</p>
+            {% endfor %}
+        {% else %}
+            <p>Please select a vendor to view conversations.</p>
+        {% endif %}
+    </div>
+
+    <!-- Send Message Form -->
+    <div class="send-message-form mt-4">
+        <h4>Send Message</h4>
+<form id="sendMessageForm" method="post" onsubmit="return sendMessage(event);">
+    {% csrf_token %}
+    <div class="form-group">
+        <textarea class="form-control" id="messageContent" name="content" rows="3" placeholder="Type your message..." required></textarea>
+    </div>
+    <input type="hidden" name="vendor_id" id="vendorId" value="{{ selected_vendor.id|default:'' }}">
+    <button type="submit" class="btn btn-primary">Send</button>
+</form>
+    </div>
+</div>
+
+
+
+
+<style>
+    .container {
+        max-width: 600px;
+        margin: auto;
+    }
+    .send-message-form {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .message-list {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .message {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+        position: relative;
+    }
+    .sent {
+        background-color: #e1ffc7; /* Light green for sent messages */
+        text-align: right;
+    }
+    .received {
+        background-color: #f0f0f0; /* Light grey for received messages */
+        text-align: left;
+    }
+    .message-content {
+        display: inline-block;
+        max-width: 80%;
+    }
+    .message-timestamp {
+        font-size: 0.8em;
+        color: gray;
+        margin-left: 10px;
+    }
+    .message-content strong {
+    display: block;
+    margin-bottom: 5px;
+}
+.btn.delete-message {
+    background-color: #ff4d4f; /* Softer red color */
+    color: white;
+    border: none;
+    border-radius: 4px; /* Rounded corners */
+    padding: 8px 16px; /* Appropriate padding */
+    font-size: 14px; /* Slightly larger font for readability */
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Light shadow for 3D effect */
+}
+
+.btn.delete-message:hover {
+    background-color: #ff1a1a; /* Darker red on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.btn.delete-message:active {
+    background-color: #e60000; /* Even darker red when clicked */
+    transform: translateY(0); /* Return to normal position */
+}
+
+</style>
+{% csrf_token %}
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+function checkForNewMessages() {
+    const vendorIdElement = document.getElementById('vendorSelect');  // Ensure you're accessing the correct element
+
+    if (vendorIdElement) {  // Ensure the element exists
+        const vendorId =vendorIdElement.value;
+
+        fetch(`/client/check_new_messages/?vendor_id=${vendorId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_messages) {
+                    // Update only the message list, not the whole page
+                    const messageList = document.getElementById('messageList');
+                    
+                    if (messageList) {
+                        messageList.innerHTML = data.new_messages_html;  // Replace message list content
+                    }
+                }
+            })
+            .catch(error => console.error('Error checking for new messages:', error));
+    } else {
+        console.error("Vendor ID element not found");
+    }
+}
+
+// Poll the server every few seconds for new messages
+// setInterval(checkForNewMessages, 5000);
+
+function filterVendor(vendorId) {
+    // Redirect to the same page with selected vendor ID
+    window.location.href = '?vendor_id=' + vendorId;
+}
+
+async function sendMessage(event) {
+    event.preventDefault(); // Prevent default form submission
+    const form = event.target;
+    const formData = new FormData(form);
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Indicate that this is an AJAX request
+            }
+        });
+        if (response.ok) {
+            const data = await response.json(); // Expecting JSON response
+            if (data.status === 'success') {
+                const messageList = document.getElementById('messageList');
+                
+                // Update the message list
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message sent';
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <p><strong>You:</strong> ${data.content}</p>
+                        <span class="message-timestamp">${data.timestamp}</span>
+                    </div>
+                    <button class="btn btn-danger btn-sm delete-message" data-message-id="${data.id}">Delete</button>
+                `;
+                messageList.appendChild(messageDiv);
+                form.reset(); // Reset the form
+            } else {
+                console.error('Error sending message:', data.message);
+            }
+        } else {
+            console.error('Error sending message:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+    }
+}
+// Handle message deletion
+$(document).on('click', '.delete-message', function(e) {
+    e.preventDefault();
+    const messageElement = $(this).closest('.message');
+    const messageId = $(this).data('message-id');
+    
+    if (!messageId) {
+        console.error('Message ID is undefined');
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: `/client/delete_message/${messageId}/`,
+        data: {
+            'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
+        },
+        success: function(response) {
+            console.log('Success response:', response);
+            if (response.success) {
+                messageElement.remove();
+            } else {
+                console.error('Error in success callback:', response.error);
+                alert('Error deleting message: ' + response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('XHR status:', status);
+            console.error('Error:', error);
+            console.error('Response Text:', xhr.responseText);
+            try {
+                const response = JSON.parse(xhr.responseText);
+                console.error('Parsed error response:', response);
+            } catch (e) {
+                console.error('Could not parse error response');
+            }
+            alert('An error occurred. Please check the console for details.');
+        }
+    });
+});
+
+    // Add event listener to the textarea for Enter key submission
+    document.getElementById('messageContent').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevent adding a new line
+            document.getElementById('sendMessageForm').submit(); // Submit the form
+        }
+    });
+
+</script>
+
+    </div>
+
+</body>
+</html>

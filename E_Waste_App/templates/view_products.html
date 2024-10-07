@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Products</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Your Products</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'vendor_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details' %}">My Profile</a></li>
+                <li><a href="{% url 'view_messages1' %}">View Chatroom ({{ unread_message_count }})</a></li>
+                <li><a href="{% url 'post_product' %}">Post Products</a></li>
+                <li><a href="{% url 'view_products' %}">View Products</a></li>
+                <li><a href="{% url 'view_orders' %}">View Orders</a></li> 
+                <li><a href="{% url 'view_ratings' %}">View Ratings</a></li>                
+                <li><a href="{% url 'vendor_logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="product-list">
+            <h2>My Products</h2>
+            <div class="products">
+                {% for product in products %}
+                    <div class="product">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        <h3>{{ product.name }}</h3>
+                        <p>Price: KSh {{ product.price }}</p>
+                        <p>{{ product.description }} <b>This product is swappable.</b></p>
+                        <a href="{% url 'delete_product' product.id %}" style="background-color: red;">Delete Product</a>
+                    </div>
+                {% empty %}
+                    <p>No products available.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

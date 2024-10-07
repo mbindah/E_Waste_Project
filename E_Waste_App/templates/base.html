@@ -1,0 +1,100 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Shop{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #4CAF50;
+            color: white;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        main {
+            padding: 20px;
+        }
+        .product-list, .order-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .product-list li, .order-list li {
+            background-color: white;
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .logo h1 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>My Shop</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="{% url 'client_dashboard' %}">Client Dashboard</a></li>
+                <li><a href="{% url 'vendor_dashboard' %}">Vendor Dashboard</a></li>
+                <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                <li><a href="{% url 'vendor_login' %}">Vendor Login</a></li>
+                <li><a href="{% url 'client_login' %}">Client Login</a></li>
+                <li><a href="{% url 'vendor_signup' %}">Vendor Signup</a></li>
+                <li><a href="{% url 'client_signup' %}">Client Signup</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 My Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

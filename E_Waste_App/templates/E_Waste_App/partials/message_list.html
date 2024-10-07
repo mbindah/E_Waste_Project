@@ -1,0 +1,8 @@
+{% for message in messages %}
+    <div class="message {% if message.sender == vendor %}sent{% else %}received{% endif %}">
+        <div class="message-content">
+            <p><strong>{% if message.sender == vendor %}You{% else %}{{ message.sender }}{% endif %}:</strong> {{ message.content }}</p>
+            <span class="message-timestamp">{{ message.timestamp|date:"H:i A" }}</span>
+        </div>
+    </div>
+{% endfor %}

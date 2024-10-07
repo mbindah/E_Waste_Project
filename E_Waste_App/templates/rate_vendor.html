@@ -1,0 +1,38 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Product</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Client Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'client_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details1' %}">My Profile</a></li>
+                <li><a href="{% url 'view_orders_for_client' %}">View Orders</a></li>
+                <li><a href="{% url 'view_messages' %}">View Chatroom ({{unread_message_count}})</a></li>
+                <li><a href="{% url 'client_logout' %}">Logout</a></li>
+                <!-- Add more links as needed -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+    <div class="product-detail">
+<h1>Rate Vendor: {{ vendor.company_name }}</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit Rating</button>
+</form>
+    </div>
+
+</body>
+</html>

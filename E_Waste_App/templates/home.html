@@ -1,0 +1,75 @@
+<!-- E_Waste_App/templates/home.html -->
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Waste Shop</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">  <!-- Link to your CSS file -->
+</head>
+<body>
+    <header>
+        <h1>Welcome to the E-Waste Shop</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'vendor_login' %}" class="btn">Vendor Login</a></li> <!-- Vendor login button -->
+                <li><a href="{% url 'client_login' %}" class="btn">Client Login</a></li> <!-- Client login button -->
+                <li><a href="{% url 'client_signup' %}" class="btn">Client Register</a></li> <!-- Client registration button -->
+                <!-- Add more links as needed -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="product-list">
+            <h2>Available Products</h2>
+            <!-- home.html -->
+<form method="GET" action="" style="width: 100%;">
+    <!-- Search Box -->
+    <input type="text" name="q" placeholder="Search products..." value="{{ search_query }}" />
+
+    <!-- Vendor Filter (Example: Select dropdown) -->
+    <label for="vendor">Filter by Vendor:</label>
+    <select name="vendor" id="vendor">
+        <option value="">All Vendors</option>
+        {% for vendor in vendors %}
+            <option value="{{ vendor.id }}" {% if vendor.id == filter_vendor %}selected{% endif %}>{{ vendor.company_name }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Price Filters -->
+    <label for="min_price">Min Price:</label>
+    <input type="number" name="min_price" value="{{ min_price }}" step="0.01" />
+
+    <label for="max_price">Max Price:</label>
+    <input type="number" name="max_price" value="{{ max_price }}" step="0.01" />
+
+    <!-- Submit Button -->
+    <button type="submit">Search</button>
+</form>
+
+
+            <div class="products">
+                {% for product in products %}
+                    <div class="product">
+                        <img src="{{MEDIA_URL}}{{ product.image }}" alt="{{ product.name }}"> <!-- Product image -->
+                        <h3>{{ product.name }}</h3>
+                        <h6>From {{ product.vendor.company_name }}</h6>
+                        <p>Price: KSh {{ product.price }}</p>
+                        <p>{{ product.description }} <b>This product is swappable.</b></p>
+                        <a href="{% url 'product_detail' product.id %}">View Details</a>
+                    </div>
+                {% empty %}
+                    <p>No products available.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Login</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Client Login</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'vendor_login' %}" class="btn">Vendor Login</a></li> <!-- Vendor login button -->
+                <li><a href="{% url 'client_login' %}" class="btn">Client Login</a></li> <!-- Client login button -->
+                <li><a href="{% url 'client_signup' %}" class="btn">Client Register</a></li> <!-- Client registration button -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+<form method="POST">
+    {% csrf_token %}
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username">
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password">
+    
+    <button type="submit">Login</button>
+</form>
+
+<p>Don't have an account? <a href="{% url 'client_signup' %}">Sign up here</a>.</p>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

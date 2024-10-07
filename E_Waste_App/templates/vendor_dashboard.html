@@ -1,0 +1,150 @@
+{% load static %}
+{% load json_encode from json_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Vendor Dashboard</h1>
+        <h4 style="color: lightgreen;">Welcome Vendor, {{ user.username }}!</h4>
+        <nav>
+            <ul>
+                <li><a href="{% url 'vendor_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details' %}">My Profile</a></li>
+                <li><a href="{% url 'view_messages1' %}">View Chatroom ({{ unread_message_count }})</a></li>
+                <li><a href="{% url 'post_product' %}">Post Products</a></li>
+                <li><a href="{% url 'view_products' %}">View Products</a></li>
+                <li><a href="{% url 'view_orders' %}">View Orders</a></li> 
+                <li><a href="{% url 'view_ratings' %}">View Ratings</a></li>                
+                <li><a href="{% url 'vendor_logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="metrics">
+            <h2>Performance Metrics</h2>
+            <p>Total Products: {{ total_products }}</p>
+            <p>Total Ratings: {{ total_ratings }}</p>
+            <p>Average Rating: {{ average_rating|floatformat:1 }}</p>
+        </section>
+
+    <div class="chart-container">
+        <canvas id="productPerformanceChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="monthlySalesChart"></canvas>
+    </div>
+
+<br>
+<br>
+
+    <script>
+        console.log("Raw product performance data:", '{{ product_performance|escapejs }}');
+        console.log("Raw monthly sales data:", '{{ monthly_sales|escapejs }}');
+
+        var productPerformance, monthlySales;
+        
+        try {
+            productPerformance = JSON.parse('{{ product_performance|escapejs }}');
+            console.log("Parsed product performance data:", productPerformance);
+        } catch (error) {
+            console.error("Error parsing product performance data:", error);
+            productPerformance = [];
+        }
+
+        try {
+            monthlySales = JSON.parse('{{ monthly_sales|escapejs }}');
+            console.log("Parsed monthly sales data:", monthlySales);
+        } catch (error) {
+            console.error("Error parsing monthly sales data:", error);
+            monthlySales = [];
+        }
+
+        // Function to safely get data or return empty array
+        function safeGet(data, key) {
+            return (data && data.length && data.map(item => item[key])) || [];
+        }
+
+        // Product Performance Chart
+        var productCtx = document.getElementById('productPerformanceChart').getContext('2d');
+        var productChart = new Chart(productCtx, {
+            type: 'bar',
+            data: {
+                labels: safeGet(productPerformance, 'name'),
+                datasets: [{
+                    label: 'Sales Count',
+                    data: safeGet(productPerformance, 'sales_count'),
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Revenue',
+                    data: safeGet(productPerformance, 'revenue'),
+                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Product Performance'
+                    }
+                }
+            }
+        });
+
+        // Monthly Sales Chart
+        var salesCtx = document.getElementById('monthlySalesChart').getContext('2d');
+        var salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: safeGet(monthlySales, 'month').map(date => {
+                    return new Date(date).toLocaleString('default', { month: 'short', year: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Monthly Sales',
+                    data: safeGet(monthlySales, 'sales'),
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Sales'
+                    }
+                }
+            }
+        });
+    </script>
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>

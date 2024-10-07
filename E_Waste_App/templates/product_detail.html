@@ -1,0 +1,43 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Waste Shop - {{ product.name }} - Product Details</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the E-Waste Shop</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'vendor_login' %}" class="btn">Vendor Login</a></li> <!-- Vendor login button -->
+                <li><a href="{% url 'client_login' %}" class="btn">Client Login</a></li> <!-- Client login button -->
+                <li><a href="{% url 'client_signup' %}" class="btn">Client Register</a></li> <!-- Client registration button -->
+                <!-- Add more links as needed -->
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+    <div class="product-detail">
+        <h1>{{ product.name }}</h1>
+        
+        <!-- Display the product image if available -->
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+        {% else %}
+            <img src="{% static 'images/placeholder.png' %}" alt="No Image Available" class="product-image">
+        {% endif %}
+        
+        <p><strong>Description:</strong> {{ product.description }}.  This product is swappable.</p>
+        <p><strong>Price:</strong> KSh {{ product.price }}</p>
+        <p><strong>Status:</strong> {{ product.status }}</p>
+
+    </div>
+
+</body>
+</html>

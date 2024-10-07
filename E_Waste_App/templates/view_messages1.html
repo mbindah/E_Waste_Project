@@ -1,0 +1,261 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Messages</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>View Messages</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'vendor_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details' %}">My Profile</a></li>
+                <li><a href="{% url 'view_messages1' %}">View Chatroom ({{ unread_message_count }})</a></li>
+                <li><a href="{% url 'post_product' %}">Post Products</a></li>
+                <li><a href="{% url 'view_products' %}">View Products</a></li>
+                <li><a href="{% url 'view_orders' %}">View Orders</a></li> 
+                <li><a href="{% url 'view_ratings' %}">View Ratings</a></li>                
+                <li><a href="{% url 'vendor_logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+<div class="container">
+    <h2>Messages with Clients</h2>
+
+    <div class="filter-section mb-4">
+        <label for="clientSelect">Select Client:</label>
+        <select id="clientSelect" class="form-control" onchange="filterClient(this.value)">
+            <option value="" disabled selected>Select a client</option>
+            {% for client in clients_with_messages %}
+                <option value="{{ client.id }}" {% if selected_client and selected_client.id == client.id %}selected{% endif %}>
+                    {{ client.user.first_name }} {{ client.user.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="message-list mt-4" id="messageList">
+        <h4>Your Conversations</h4>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.sender == request.user.vendor %}sent{% else %}received{% endif %}" data-message-id="{{ message.id }}">
+                    <div class="message-content">
+                        {% if message.sender == request.user.vendor %}
+                            <p><strong>You:</strong> {{ message.content }}</p>
+                        {% else %}
+                            <p><strong>{{ message.sender.user.username }}:</strong> {{ message.content }}</p>
+                        {% endif %}
+                        <span class="message-timestamp">{{ message.timestamp|date:"F j, Y H:i A" }}</span>
+                    </div>
+                    {% if message.sender == request.user.vendor %}
+                        <button class="btn btn-danger btn-sm delete-message" data-message-id="{{ message.id }}">Delete</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Please select a client to view conversations.</p>
+        {% endif %}
+    </div>
+
+    <!-- Send Message Form -->
+    <div class="send-message-form mt-4">
+        <h4>Send Message</h4>
+        <form id="sendMessageForm" method="post" onsubmit="return sendMessage(event);">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea class="form-control" name="content" rows="3" placeholder="Type your message..." required></textarea>
+            </div>
+            <input type="hidden" name="client_id" id="clientId" value="{{ selected_client.id|default:'' }}">
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+</div>
+<style>
+    .container {
+        max-width: 600px;
+        margin: auto;
+    }
+    .send-message-form {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .message-list {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .message {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+        position: relative;
+    }
+    .sent {
+        background-color: #e1ffc7; /* Light green for sent messages */
+        text-align: right;
+    }
+    .received {
+        background-color: #f0f0f0; /* Light grey for received messages */
+        text-align: left;
+    }
+    .message-content {
+        display: inline-block;
+        max-width: 80%;
+    }
+    .message-timestamp {
+        font-size: 0.8em;
+        color: gray;
+        margin-left: 10px;
+    }
+    .message-content strong {
+    display: block;
+    margin-bottom: 5px;
+}
+.btn.delete-message {
+    background-color: #ff4d4f; /* Softer red color */
+    color: white;
+    border: none;
+    border-radius: 4px; /* Rounded corners */
+    padding: 8px 16px; /* Appropriate padding */
+    font-size: 14px; /* Slightly larger font for readability */
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Light shadow for 3D effect */
+}
+
+.btn.delete-message:hover {
+    background-color: #ff1a1a; /* Darker red on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.btn.delete-message:active {
+    background-color: #e60000; /* Even darker red when clicked */
+    transform: translateY(0); /* Return to normal position */
+}
+
+</style>
+{% csrf_token %}
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function checkForNewMessages() {
+    const clientIdElement = document.getElementById('clientSelect');  // Ensure you're accessing the correct element
+
+    if (clientIdElement) {  // Ensure the element exists
+        const clientId = clientIdElement.value;
+
+        fetch(`/vendor/check_new_messages/?client_id=${clientId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_messages) {
+                    // Update only the message list, not the whole page
+                    const messageList = document.getElementById('messageList');
+                    
+                    if (messageList) {
+                        messageList.innerHTML = data.new_messages_html;  // Replace message list content
+                    }
+                }
+            })
+            .catch(error => console.error('Error checking for new messages:', error));
+    } else {
+        console.error("Client ID element not found");
+    }
+}
+
+// Poll the server every few seconds for new messages
+// setInterval(checkForNewMessages, 5000);
+
+function filterClient(clientId) {
+    // Redirect to the same page with selected client ID
+    window.location.href = '?client_id=' + clientId;
+}
+
+async function sendMessage(event) {
+    event.preventDefault(); // Prevent default form submission
+    const form = event.target;
+    const formData = new FormData(form);
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Indicate that this is an AJAX request
+            }
+        });
+        if (response.ok) {
+            const data = await response.json(); // Expecting JSON response
+            if (data.status === 'success') {
+                const messageList = document.getElementById('messageList');
+                
+                // Update the message list
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message sent';
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <p><strong>You:</strong> ${data.content}</p>
+                        <span class="message-timestamp">${data.timestamp}</span>
+                    </div>
+                    <button class="btn btn-danger btn-sm delete-message" data-message-id="${data.id}">Delete</button>
+                `;
+                messageList.appendChild(messageDiv);
+                form.reset(); // Reset the form
+            } else {
+                console.error('Error sending message:', data.message);
+            }
+        } else {
+            console.error('Error sending message:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+    }
+}
+
+// Handle message deletion
+$(document).on('click', '.delete-message', function(e) {
+    e.preventDefault();
+    const messageElement = $(this).closest('.message');
+    const messageId = $(this).data('message-id');
+
+    if (!messageId) {
+        console.error('Message ID is undefined');
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: `/vendor/delete_message/${messageId}/`,
+        data: {
+            'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
+        },
+        success: function(response) {
+            if (response.success) {
+                messageElement.remove();
+            } else {
+                console.error('Error deleting message:', response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the message.');
+        }
+    });
+});
+</script>
+
+    </div>
+
+</body>
+</html>

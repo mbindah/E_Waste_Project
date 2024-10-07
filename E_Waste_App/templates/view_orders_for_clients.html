@@ -1,0 +1,87 @@
+{% load static %}
+{% load json_encode from json_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+        <style type="text/css">
+        
+          table{
+    align-items: center;
+  }
+
+   th, tr, td{
+    padding: 10px 10px;
+  }
+    </style>
+<body>
+    <header>
+        <h1>Client Dashboard</h1>
+        <h4 style="color: lightgreen;">Welcome Client, {{ user.username }}!</h4>
+        <nav>
+            <ul>
+                <li><a href="{% url 'client_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'update_user_details1' %}">My Profile</a></li>
+                <li><a href="{% url 'view_orders' %}">View Orders</a></li>
+                <li><a href="{% url 'view_messages' %}">View Chatroom ({{unread_message_count}})</a></li>
+                <li><a href="{% url 'client_logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+<div class="container mt-5">
+    <h2>Your Orders</h2>
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Product</th>
+                <th>Vendor</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.product.name }}</td>
+                <td>{{ order.product.vendor.company_name }}</td>
+                <td>KShs. {{ order.product.price }}</td>
+                <td>{{ order.status }}</td>
+                <td>
+                    {% if order.status == 'Pending' %}
+                        <a href="{% url 'cancel_order' order.id %}" class="btn btn-warning btn-sm">Cancel Order</a>
+                    {% endif %}
+                    {% if order.status == 'Completed' %}
+                        <a href="{% url 'rate_vendor' order.product.vendor.id %}" class="btn btn-secondary btn-sm">Rate Vendor</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No orders available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    </main>
+
+
+
+    <footer>
+        <p>&copy; 2024 E-Waste Shop. All rights reserved.</p>
+    </footer>
+</body>
+</html>
